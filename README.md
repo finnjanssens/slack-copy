@@ -19,23 +19,31 @@ clipboard with `pbcopy` (macOS).
 
 ## What it does
 
-Built on [slackify-markdown](https://github.com/jsarafajr/slackify-markdown),
-plus two fixes to its output:
-
-- strips the zero-width spaces it wraps emphasis in, which otherwise ride along
-  into Slack as invisible characters
-- collapses the 4-column list marker padding to a single space
+No dependencies. mrkdwn is a flat, line-oriented format, so a block pass plus an
+inline pass covers it in one file.
 
 Conversions:
 
 | Markdown | Slack |
 | --- | --- |
-| `**bold**` | `*bold*` |
+| `**bold**`, `__bold__` | `*bold*` |
 | `*italic*` | `_italic_` |
+| `***both***` | `*_both_*` |
+| `~~strike~~` | `~strike~` |
 | `# Heading` | `*Heading*` (mrkdwn has no headings) |
-| `[text](url)` | `<url\|text>` |
-| nested lists | indented `•` bullets |
-| tables | code block |
+| `[text](url)`, `![alt](url)` | `<url\|text>`, title dropped |
+| `&`, `<`, `>` | `&amp;`, `&lt;`, `&gt;` |
+| lists | `•` bullets, original indent kept |
+| `1.` lists | numbers verbatim, Slack does not renumber |
+| ` ```js ` | ` ``` `, mrkdwn fences take no language |
+| tables | code block, separator row dropped |
+| `---` | a rule of box-drawing characters |
+| `<!-- comment -->` | removed |
+
+Code spans and fences are escaped but never reformatted.
+
+Not handled: reference links (`[text][id]`), setext headings (`===`
+underlines), footnotes.
 
 ## Test
 

@@ -12,9 +12,6 @@
   "scripts": {
     "test": "node test.js"
   },
-  "dependencies": {
-    "slackify-markdown": "^5.0.0"
-  },
   "license": "MIT",
   "private": true
 }
