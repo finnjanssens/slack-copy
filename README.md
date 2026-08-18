@@ -1,49 +1,55 @@
 # slack-copy
 
-Markdown to Slack mrkdwn, on the clipboard.
+Markdown on the clipboard, ready to paste into Slack.
 
-Slack only renders pasted Markdown when the composer's "format as Markdown"
-option is on. With that option off, this converts to Slack's own mrkdwn first so
-a plain paste comes out formatted.
+Slack's default composer is rich text: the one with the **B** *I* U toolbar. It
+does not interpret mrkdwn, so pasting `*bold*` or `<url|label>` into it leaves
+the asterisks, pipes and brackets sitting there literally. mrkdwn is only
+interpreted for messages sent through the API, or when you turn on the "format
+messages with markup" preference, which replaces the rich composer entirely.
+
+So this puts two clipboard flavours down at once:
+
+- **`text/html`** — what the rich composer actually reads. Pasting produces real
+  bold, lists, code and links, with no Slack setting involved.
+- **plain text** — mrkdwn, as a fallback for markup mode and for API posting.
 
 ## Usage
 
 ```bash
-npx ~/Personal/slack-copy message.md     # convert, print, copy
+npx ~/Personal/slack-copy message.md          # convert and copy
 cat message.md | npx ~/Personal/slack-copy
-npx ~/Personal/slack-copy --no-copy msg.md   # print only
+npx ~/Personal/slack-copy --no-copy msg.md    # print only
+npx ~/Personal/slack-copy --html msg.md       # print the HTML it copies
 ```
 
-Reads a file argument or stdin, prints the result on stdout and copies it to the
-clipboard with `pbcopy` (macOS).
+Reads a file argument or stdin. Prints the mrkdwn on stdout, since it is the
+readable one to eyeball. macOS only: the clipboard write goes through
+`osascript`, because `pbcopy` can only carry plain text.
 
-## What it does
+## Conversions
 
-No dependencies. mrkdwn is a flat, line-oriented format, so a block pass plus an
-inline pass covers it in one file.
+| Markdown | HTML flavour | plain flavour |
+| --- | --- | --- |
+| `**bold**`, `__bold__` | `<b>` | `*bold*` |
+| `*italic*`, `_italic_` | `<i>` | `_italic_` |
+| `***both***` | `<b><i>` | `*_both_*` |
+| `~~strike~~` | `<s>` | `~strike~` |
+| `# Heading` | bold paragraph | `*Heading*` |
+| `[text](url)` | `<a href>` | `<url\|text>` |
+| `` `code` `` | `<code>` | unchanged |
+| ` ```js ` | `<pre><code>` | ` ``` `, language dropped |
+| lists, nested | `<ul>`/`<ol>`, nested in the `<li>` | `•`, indent kept |
+| `> quote` | `<blockquote>` | `> quote` |
+| tables | `<pre>`, columns kept aligned | code block |
+| `---` | `────────` | `────────` |
+| `<!-- comment -->` | removed | removed |
 
-Conversions:
-
-| Markdown | Slack |
-| --- | --- |
-| `**bold**`, `__bold__` | `*bold*` |
-| `*italic*` | `_italic_` |
-| `***both***` | `*_both_*` |
-| `~~strike~~` | `~strike~` |
-| `# Heading` | `*Heading*` (mrkdwn has no headings) |
-| `[text](url)`, `![alt](url)` | `<url\|text>`, title dropped |
-| `&`, `<`, `>` | `&amp;`, `&lt;`, `&gt;` |
-| lists | `•` bullets, original indent kept |
-| `1.` lists | numbers verbatim, Slack does not renumber |
-| ` ```js ` | ` ``` `, mrkdwn fences take no language |
-| tables | code block, separator row dropped |
-| `---` | a rule of box-drawing characters |
-| `<!-- comment -->` | removed |
-
+Neither target has headings or tables, so those degrade rather than convert.
 Code spans and fences are escaped but never reformatted.
 
-Not handled: reference links (`[text][id]`), setext headings (`===`
-underlines), footnotes.
+Not handled: reference links (`[text][id]`), setext headings (`===` underlines),
+footnotes.
 
 ## Test
 

@@ -1,12 +1,19 @@
 #!/usr/bin/env node
-// slack-copy: Markdown -> Slack mrkdwn, on the clipboard.
+// slack-copy: Markdown -> Slack, on the clipboard.
 //
-// Slack only renders pasted Markdown when the composer's "format as Markdown"
-// option is on. This converts to Slack's own mrkdwn instead, so a plain paste
-// looks right with that option off.
+// Slack's default composer is rich text (the B/I/U toolbar). It does not
+// interpret mrkdwn at all: pasted *bold* stays literally *bold* and <url|label>
+// shows its pipe and brackets. mrkdwn is only interpreted for messages sent
+// through the API, or when the "format messages with markup" preference is on.
 //
-// Hand-rolled rather than parsed: mrkdwn is a flat, line-oriented format with no
-// nesting to speak of, so a block pass plus an inline pass covers it.
+// So the clipboard gets two flavours:
+//
+//   text/html  what the rich composer actually reads. Pasting it produces real
+//              bold, lists and links with no Slack setting involved.
+//   plain text mrkdwn, as a fallback for markup mode and for API posting.
+//
+// Hand-rolled rather than parsed: neither target needs more than a block pass
+// plus an inline pass.
 import { readFileSync, realpathSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 
@@ -130,16 +137,175 @@ export function toSlack(markdown) {
   return out.join("\n").trimEnd() + "\n";
 }
 
+// ---------------------------------------------------------------- HTML output
+
+const escapeHtml = (s) =>
+  s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+
+function inlineHtmlRun(text) {
+  let out = escapeHtml(text);
+  // Bare autolinks were written as <url>.
+  out = out.replace(/&lt;((?:https?|mailto):[^\s|>]+)&gt;/g, '<a href="$1">$1</a>');
+  const link = (_, label, url) => `<a href="${url}">${label || url}</a>`;
+  out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, link);
+  out = out.replace(/\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, link);
+  out = out.replace(/(\*\*\*|___)(?=\S)([\s\S]*?\S)\1/g, "<b><i>$2</i></b>");
+  out = out.replace(/(\*\*|__)(?=\S)([\s\S]*?\S)\1/g, "<b>$2</b>");
+  out = out.replace(/(?<![\w*])\*(?=\S)([^*\n]*\S)\*(?![\w*])/g, "<i>$1</i>");
+  out = out.replace(/(?<![\w_])_(?=\S)([^_\n]*\S)_(?![\w_])/g, "<i>$1</i>");
+  out = out.replace(/~~(?=\S)([\s\S]*?\S)~~/g, "<s>$1</s>");
+  return out;
+}
+
+const inlineHtml = (text) =>
+  text
+    .split(/(`+[^`\n]+`+)/g)
+    .map((part, i) =>
+      i % 2 ? `<code>${escapeHtml(part.replace(/^`+|`+$/g, ""))}</code>` : inlineHtmlRun(part),
+    )
+    .join("");
+
+// Items are pre-collected as {indent, ordered, text}; nesting comes from indent,
+// and a deeper list is emitted inside the <li> that precedes it so Slack shows it
+// as a sub-bullet rather than a new list.
+function listHtml(items, cursor, indent) {
+  const ordered = items[cursor.i].ordered;
+  let html = ordered ? "<ol>" : "<ul>";
+  while (cursor.i < items.length) {
+    const item = items[cursor.i];
+    if (item.indent < indent || (item.indent === indent && item.ordered !== ordered)) break;
+    cursor.i++;
+    html += `<li>${inlineHtml(item.text)}`;
+    const next = items[cursor.i];
+    if (next && next.indent > indent) html += listHtml(items, cursor, next.indent);
+    html += "</li>";
+  }
+  return html + (ordered ? "</ol>" : "</ul>");
+}
+
+export function toHtml(markdown) {
+  const lines = markdown
+    .replace(/\r\n?/g, "\n")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .split("\n");
+
+  const out = [];
+  let paragraph = [];
+
+  const flush = () => {
+    if (paragraph.length) out.push(`<p>${paragraph.map(inlineHtml).join("<br>")}</p>`);
+    paragraph = [];
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (!line.trim()) {
+      flush();
+      continue;
+    }
+
+    if (/^\s*(```|~~~)/.test(line)) {
+      flush();
+      const code = [];
+      i++;
+      while (i < lines.length && !/^\s*(```|~~~)/.test(lines[i])) code.push(lines[i++]);
+      out.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+      continue;
+    }
+
+    if (isTableRow(line) && isTableSeparator(lines[i + 1])) {
+      flush();
+      const rows = [];
+      while (i < lines.length && isTableRow(lines[i])) {
+        if (!isTableSeparator(lines[i])) rows.push(lines[i]);
+        i++;
+      }
+      i--;
+      // Slack's composer has no table, but a code block keeps the columns lined up.
+      out.push(`<pre><code>${escapeHtml(rows.join("\n"))}</code></pre>`);
+      continue;
+    }
+
+    const heading = line.match(/^#{1,6}\s+(.*?)\s*#*$/);
+    if (heading) {
+      flush();
+      // Slack has no headings, so a bold paragraph is as close as it gets.
+      out.push(`<p><b>${inlineHtml(heading[1].replace(/\*\*|__/g, ""))}</b></p>`);
+      continue;
+    }
+
+    if (/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)) {
+      flush();
+      out.push("<p>────────</p>");
+      continue;
+    }
+
+    if (/^\s*([-*+]|\d+[.)])\s+/.test(line)) {
+      flush();
+      const items = [];
+      while (i < lines.length) {
+        const item = lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+        if (!item) break;
+        items.push({
+          indent: item[1].length,
+          ordered: /\d/.test(item[2]),
+          text: item[3],
+        });
+        i++;
+      }
+      i--;
+      out.push(listHtml(items, { i: 0 }, items[0].indent));
+      continue;
+    }
+
+    const quote = line.match(/^\s*>\s?(.*)$/);
+    if (quote) {
+      flush();
+      const quoted = [quote[1]];
+      while (i + 1 < lines.length && /^\s*>/.test(lines[i + 1])) {
+        quoted.push(lines[++i].replace(/^\s*>\s?/, ""));
+      }
+      out.push(`<blockquote>${quoted.map(inlineHtml).join("<br>")}</blockquote>`);
+      continue;
+    }
+
+    paragraph.push(line);
+  }
+  flush();
+
+  return out.join("");
+}
+
+// Set both clipboard flavours in one shot. pbcopy is plain text only, so this
+// goes through AppleScript; both payloads are hex so nothing needs escaping for
+// AppleScript's string syntax.
+function copyRich(html, plain) {
+  const hex = (s) => Buffer.from(s, "utf8").toString("hex");
+  execFileSync("osascript", [
+    "-e",
+    `set the clipboard to {«class HTML»:«data HTML${hex(html)}», ` +
+      `«class utf8»:«data utf8${hex(plain)}»}`,
+  ]);
+}
+
 function main(argv) {
   const args = argv.slice(2);
   const noCopy = args.includes("--no-copy");
-  const rest = args.filter((a) => a !== "--no-copy");
+  const rest = args.filter((a) => !a.startsWith("--"));
 
   if (rest.includes("-h") || rest.includes("--help")) {
     process.stdout.write(
-      "usage: slack-copy [--no-copy] [file]\n\n" +
-        "Reads Markdown from <file> or stdin, prints Slack mrkdwn on stdout\n" +
-        "and copies it to the clipboard.\n",
+      "usage: slack-copy [--no-copy|--html] [file]\n\n" +
+        "Reads Markdown from <file> or stdin and copies it to the clipboard as\n" +
+        "rich text, ready to paste into Slack's composer. Prints the mrkdwn\n" +
+        "equivalent on stdout.\n\n" +
+        "  --no-copy  print only, leave the clipboard alone\n" +
+        "  --html     print the HTML that goes on the clipboard\n",
     );
     return 0;
   }
@@ -153,10 +319,10 @@ function main(argv) {
   const markdown = readFileSync(file && file !== "-" ? file : 0, "utf8");
   const slack = toSlack(markdown);
 
-  // Copy before printing: if pbcopy fails we exit non-zero without having
+  // Copy before printing: if the copy fails we exit non-zero without having
   // claimed success on stdout.
-  if (!noCopy) execFileSync("pbcopy", { input: slack });
-  process.stdout.write(slack);
+  if (!noCopy) copyRich(toHtml(markdown), slack);
+  process.stdout.write(args.includes("--html") ? toHtml(markdown) + "\n" : slack);
   return 0;
 }
 
