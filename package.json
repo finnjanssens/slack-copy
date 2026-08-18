@@ -1,0 +1,20 @@
+{
+  "name": "slack-copy",
+  "version": "1.0.0",
+  "description": "Convert Markdown to Slack mrkdwn and put it on the clipboard",
+  "type": "module",
+  "bin": {
+    "slack-copy": "index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "slackify-markdown": "^5.0.0"
+  },
+  "license": "MIT",
+  "private": true
+}
