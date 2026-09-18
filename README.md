@@ -67,5 +67,10 @@ Markdown → mrkdwn/HTML table.
 ## Test
 
 ```bash
-npm test
+npm test        # unit suite + eval rows
+node evals/check.js   # evals only
 ```
+
+`test.ts` is the unit suite; `evals/` holds the data-driven evals: one row in
+`evals/cases.json` pins one behaviour, and `evals/check.js` reports by row ID.
+A new behaviour is a new row, and CI runs both on every PR.
