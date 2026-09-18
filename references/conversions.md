@@ -20,4 +20,4 @@ Neither target has headings or tables, so those degrade rather than convert.
 Code spans and fences are escaped but never reformatted.
 
 Not handled: reference links (`[text][id]`), setext headings (`===` underlines),
-footnotes.
+footnotes, code spans inside a link label.

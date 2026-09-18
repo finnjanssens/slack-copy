@@ -10,7 +10,8 @@
     "scripts/index.js"
   ],
   "scripts": {
-    "test": "node test.js"
+    "test": "node test.js && node evals/check.js",
+    "evals": "node evals/check.js"
   },
   "license": "MIT",
   "private": true
