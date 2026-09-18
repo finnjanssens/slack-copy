@@ -14,13 +14,13 @@ natively, with mrkdwn as a plain-text fallback.
 
 ## Usage
 
-Run the converter from this skill's directory (`scripts/index.js` sits under
+Run the converter from this skill's directory (`scripts/index.ts` sits under
 `scripts/`, per the Agent Skills layout). It reads a file argument or stdin,
 copies both clipboard flavours and prints the mrkdwn on stdout:
 
 ```bash
 npx github:finnjanssens/slack-copy msg.md          # from anywhere
-node <skill-dir>/scripts/index.js msg.md           # when installed as a skill
+node <skill-dir>/scripts/index.ts msg.md           # when installed as a skill
 cat msg.md | npx github:finnjanssens/slack-copy
 ```
 

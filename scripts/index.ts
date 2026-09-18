@@ -22,15 +22,15 @@ const ITALIC = "\x01";
 
 // Slack requires these three escaped everywhere, including inside code spans and
 // fences. It unescapes them when rendering.
-const escapeEntities = (s) =>
+const escapeEntities = (s: string) =>
   s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
-const isTableSeparator = (line) => /^\s*\|?[\s:|-]*-[\s:|-]*\|[\s:|-]*$/.test(line ?? "");
+const isTableSeparator = (line: string | undefined) => /^\s*\|?[\s:|-]*-[\s:|-]*\|[\s:|-]*$/.test(line ?? "");
 
-const isTableRow = (line) => /^\s*\|/.test(line);
+const isTableRow = (line: string) => /^\s*\|/.test(line);
 
 // Inline formatting for one run of non-code text.
-function formatRun(text) {
+function formatRun(text: string) {
   let out = escapeEntities(text);
 
   // Autolinks were written as <url>, so undo the escaping we just applied.
@@ -38,7 +38,7 @@ function formatRun(text) {
 
   // Links before emphasis, so emphasis inside the link label still converts.
   // Titles are dropped, mrkdwn has nowhere to put them.
-  const link = (_, label, url) => (label ? `<${url}|${label}>` : `<${url}>`);
+  const link = (_: string, label: string, url: string) => (label ? `<${url}|${label}>` : `<${url}>`);
   out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, link);
   out = out.replace(/\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, link);
 
@@ -57,13 +57,13 @@ function formatRun(text) {
 }
 
 // Split code spans out so their contents are escaped but never reformatted.
-const formatInline = (text) =>
+const formatInline = (text: string) =>
   text
     .split(/(`+[^`\n]+`+)/g)
-    .map((part, i) => (i % 2 ? escapeEntities(part) : formatRun(part)))
+    .map((part: string, i: number) => (i % 2 ? escapeEntities(part) : formatRun(part)))
     .join("");
 
-export function toSlack(markdown) {
+export function toSlack(markdown: string) {
   const lines = markdown
     .replace(/\r\n?/g, "\n")
     .replace(/<!--[\s\S]*?-->/g, "")
@@ -73,7 +73,7 @@ export function toSlack(markdown) {
   let inFence = false;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i]!;
 
     if (/^\s*(```|~~~)/.test(line)) {
       inFence = !inFence;
@@ -88,9 +88,9 @@ export function toSlack(markdown) {
 
     // Tables have no mrkdwn equivalent; a fence at least keeps them aligned.
     if (isTableRow(line) && isTableSeparator(lines[i + 1])) {
-      const rows = [];
-      while (i < lines.length && isTableRow(lines[i])) {
-        if (!isTableSeparator(lines[i])) rows.push(escapeEntities(lines[i]));
+      const rows: string[] = [];
+      while (i < lines.length && isTableRow(lines[i]!)) {
+        if (!isTableSeparator(lines[i]!)) rows.push(escapeEntities(lines[i]!));
         i++;
       }
       i--;
@@ -102,7 +102,7 @@ export function toSlack(markdown) {
     if (heading) {
       // The whole heading is already bold, so bold inside it would only add
       // stray asterisks.
-      out.push(`*${formatInline(heading[1].replace(/\*\*|__/g, ""))}*`);
+      out.push(`*${formatInline(heading[1]!.replace(/\*\*|__/g, ""))}*`);
       continue;
     }
 
@@ -114,20 +114,20 @@ export function toSlack(markdown) {
 
     const bullet = line.match(/^(\s*)[-*+]\s+(.*)$/);
     if (bullet) {
-      out.push(`${bullet[1]}• ${formatInline(bullet[2])}`);
+      out.push(`${bullet[1]!}• ${formatInline(bullet[2]!)}`);
       continue;
     }
 
     // Slack does not renumber, so the author's numbers are kept verbatim.
     const ordered = line.match(/^(\s*)(\d+)[.)]\s+(.*)$/);
     if (ordered) {
-      out.push(`${ordered[1]}${ordered[2]}. ${formatInline(ordered[3])}`);
+      out.push(`${ordered[1]!}${ordered[2]!}. ${formatInline(ordered[3]!)}`);
       continue;
     }
 
     const quote = line.match(/^\s*>\s?(.*)$/);
     if (quote) {
-      out.push(`> ${formatInline(quote[1])}`);
+      out.push(`> ${formatInline(quote[1]!)}`);
       continue;
     }
 
@@ -139,18 +139,18 @@ export function toSlack(markdown) {
 
 // ---------------------------------------------------------------- HTML output
 
-const escapeHtml = (s) =>
+const escapeHtml = (s: string) =>
   s
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 
-function inlineHtmlRun(text) {
+function inlineHtmlRun(text: string) {
   let out = escapeHtml(text);
   // Bare autolinks were written as <url>.
   out = out.replace(/&lt;((?:https?|mailto):[^\s|>]+)&gt;/g, '<a href="$1">$1</a>');
-  const link = (_, label, url) => `<a href="${url}">${label || url}</a>`;
+  const link = (_: string, label: string, url: string) => `<a href="${url}">${label || url}</a>`;
   out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, link);
   out = out.replace(/\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, link);
   out = out.replace(/(\*\*\*|___)(?=\S)([\s\S]*?\S)\1/g, "<b><i>$2</i></b>");
@@ -161,10 +161,10 @@ function inlineHtmlRun(text) {
   return out;
 }
 
-const inlineHtml = (text) =>
+const inlineHtml = (text: string) =>
   text
     .split(/(`+[^`\n]+`+)/g)
-    .map((part, i) =>
+    .map((part: string, i: number) =>
       i % 2 ? `<code>${escapeHtml(part.replace(/^`+|`+$/g, ""))}</code>` : inlineHtmlRun(part),
     )
     .join("");
@@ -172,11 +172,11 @@ const inlineHtml = (text) =>
 // Items are pre-collected as {indent, ordered, text}; nesting comes from indent,
 // and a deeper list is emitted inside the <li> that precedes it so Slack shows it
 // as a sub-bullet rather than a new list.
-function listHtml(items, cursor, indent) {
-  const ordered = items[cursor.i].ordered;
+function listHtml(items: {indent: number; ordered: boolean; text: string}[], cursor: {i: number}, indent: number) {
+  const ordered = items[cursor.i]!.ordered;
   let html = ordered ? "<ol>" : "<ul>";
   while (cursor.i < items.length) {
-    const item = items[cursor.i];
+    const item = items[cursor.i]!;
     if (item.indent < indent || (item.indent === indent && item.ordered !== ordered)) break;
     cursor.i++;
     html += `<li>${inlineHtml(item.text)}`;
@@ -187,14 +187,14 @@ function listHtml(items, cursor, indent) {
   return html + (ordered ? "</ol>" : "</ul>");
 }
 
-export function toHtml(markdown) {
+export function toHtml(markdown: string) {
   const lines = markdown
     .replace(/\r\n?/g, "\n")
     .replace(/<!--[\s\S]*?-->/g, "")
     .split("\n");
 
   const out = [];
-  let paragraph = [];
+  let paragraph: string[] = [];
 
   const flush = () => {
     if (paragraph.length) out.push(`<p>${paragraph.map(inlineHtml).join("<br>")}</p>`);
@@ -202,7 +202,7 @@ export function toHtml(markdown) {
   };
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i]!;
 
     if (!line.trim()) {
       flush();
@@ -211,18 +211,18 @@ export function toHtml(markdown) {
 
     if (/^\s*(```|~~~)/.test(line)) {
       flush();
-      const code = [];
+      const code: string[] = [];
       i++;
-      while (i < lines.length && !/^\s*(```|~~~)/.test(lines[i])) code.push(lines[i++]);
+      while (i < lines.length && !/^\s*(```|~~~)/.test(lines[i]!)) code.push(lines[i++]!);
       out.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
       continue;
     }
 
     if (isTableRow(line) && isTableSeparator(lines[i + 1])) {
       flush();
-      const rows = [];
-      while (i < lines.length && isTableRow(lines[i])) {
-        if (!isTableSeparator(lines[i])) rows.push(lines[i]);
+      const rows: string[] = [];
+      while (i < lines.length && isTableRow(lines[i]!)) {
+        if (!isTableSeparator(lines[i]!)) rows.push(lines[i]!);
         i++;
       }
       i--;
@@ -235,7 +235,7 @@ export function toHtml(markdown) {
     if (heading) {
       flush();
       // Slack has no headings, so a bold paragraph is as close as it gets.
-      out.push(`<p><b>${inlineHtml(heading[1].replace(/\*\*|__/g, ""))}</b></p>`);
+      out.push(`<p><b>${inlineHtml(heading[1]!.replace(/\*\*|__/g, ""))}</b></p>`);
       continue;
     }
 
@@ -247,28 +247,28 @@ export function toHtml(markdown) {
 
     if (/^\s*([-*+]|\d+[.)])\s+/.test(line)) {
       flush();
-      const items = [];
+      const items: {indent: number; ordered: boolean; text: string}[] = [];
       while (i < lines.length) {
-        const item = lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+        const item = lines[i]!.match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
         if (!item) break;
         items.push({
-          indent: item[1].length,
-          ordered: /\d/.test(item[2]),
-          text: item[3],
+          indent: item[1]!.length,
+          ordered: /\d/.test(item[2]!),
+          text: item[3]!,
         });
         i++;
       }
       i--;
-      out.push(listHtml(items, { i: 0 }, items[0].indent));
+      out.push(listHtml(items, { i: 0 }, items[0]!.indent));
       continue;
     }
 
     const quote = line.match(/^\s*>\s?(.*)$/);
     if (quote) {
       flush();
-      const quoted = [quote[1]];
-      while (i + 1 < lines.length && /^\s*>/.test(lines[i + 1])) {
-        quoted.push(lines[++i].replace(/^\s*>\s?/, ""));
+      const quoted = [quote[1]!];
+      while (i + 1 < lines.length && /^\s*>/.test(lines[i + 1]!)) {
+        quoted.push(lines[++i]!.replace(/^\s*>\s?/, ""));
       }
       out.push(`<blockquote>${quoted.map(inlineHtml).join("<br>")}</blockquote>`);
       continue;
@@ -284,8 +284,8 @@ export function toHtml(markdown) {
 // Set both clipboard flavours in one shot. pbcopy is plain text only, so this
 // goes through AppleScript; both payloads are hex so nothing needs escaping for
 // AppleScript's string syntax.
-function copyRich(html, plain) {
-  const hex = (s) => Buffer.from(s, "utf8").toString("hex");
+function copyRich(html: string, plain: string) {
+  const hex = (s: string) => Buffer.from(s, "utf8").toString("hex");
   execFileSync("osascript", [
     "-e",
     `set the clipboard to {«class HTML»:«data HTML${hex(html)}», ` +
@@ -293,10 +293,10 @@ function copyRich(html, plain) {
   ]);
 }
 
-function main(argv) {
+function main(argv: string[]) {
   const args = argv.slice(2);
   const noCopy = args.includes("--no-copy");
-  const rest = args.filter((a) => !a.startsWith("--"));
+  const rest = args.filter((a: string) => !a.startsWith("--"));
 
   if (rest.includes("-h") || rest.includes("--help")) {
     process.stdout.write(
