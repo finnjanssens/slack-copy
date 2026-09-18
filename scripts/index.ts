@@ -289,43 +289,78 @@ export function toHtml(markdown: string) {
   return out.join("");
 }
 
-// Set both clipboard flavours in one shot. pbcopy is plain text only, so this
-// goes through AppleScript; both payloads are hex so nothing needs escaping for
-// AppleScript's string syntax.
-function copyRich(html: string, plain: string) {
-  if (process.platform === "darwin") {
+// All clipboard strategies for a platform, in priority order; the executor
+// stops at the first success. Split out so tests can inspect the dispatch and
+// run it against a fake runner on any OS.
+export type CopyPlan = { cmd: string; args: string[]; input: string }[];
+
+export function copyPlan(platform: string, html: string, plain: string): CopyPlan {
+  if (platform === "darwin") {
+    // pbcopy is plain text only, so this goes through AppleScript; both
+    // payloads are hex so nothing needs escaping for AppleScript's syntax.
     const hex = (s: string) => Buffer.from(s, "utf8").toString("hex");
-    execFileSync("osascript", [
-      "-e",
-      `set the clipboard to {«class HTML»:«data HTML${hex(html)}», ` +
-        `«class utf8»:«data utf8${hex(plain)}»}`,
-    ]);
-    return;
+    return [
+      {
+        cmd: "osascript",
+        args: [
+          "-e",
+          `set the clipboard to {«class HTML»:«data HTML${hex(html)}», ` +
+            `«class utf8»:«data utf8${hex(plain)}»}`,
+        ],
+        input: "",
+      },
+    ];
   }
 
-  if (process.platform === "linux") {
+  if (platform === "linux") {
     // wl-copy and xclip offer a single flavour per invocation, so it has to be
     // text/html: that is what Slack's rich composer reads, and pasting plain
     // mrkdwn into it is exactly what this tool exists to avoid.
-    const tryTool = (cmd: string, args: string[]) => {
-      try {
-        execFileSync(cmd, args, { input: html });
-        return true;
-      } catch {
-        return false;
-      }
-    };
-    if (tryTool("wl-copy", ["--type", "text/html"])) return;
-    if (tryTool("xclip", ["-selection", "clipboard", "-t", "text/html"])) return;
-    process.stderr.write("slack-copy: no clipboard tool found (install wl-clipboard or xclip)\n");
-    process.exit(1);
+    return [
+      { cmd: "wl-copy", args: ["--type", "text/html"], input: html },
+      { cmd: "xclip", args: ["-selection", "clipboard", "-t", "text/html"], input: html },
+    ];
   }
 
-  // Set-Clipboard is plain text only; CF_HTML is the upgrade path.
-  execFileSync("powershell", ["-NoProfile", "-Command", "$input | Set-Clipboard"], {
-    input: plain,
-  });
-  process.stderr.write("slack-copy: rich text not supported on this platform, copied plain mrkdwn only\n");
+  if (platform === "win32") {
+    // Set-Clipboard is plain text only; CF_HTML is the upgrade path.
+    return [
+      { cmd: "powershell", args: ["-NoProfile", "-Command", "$input | Set-Clipboard"], input: plain },
+    ];
+  }
+
+  return [];
+}
+
+type CopyRunner = (cmd: string, args: string[], input: string) => void;
+
+export function copyWith(plan: CopyPlan, run: CopyRunner) {
+  let last: unknown;
+  for (const { cmd, args, input } of plan) {
+    try {
+      run(cmd, args, input);
+      return;
+    } catch (err) {
+      last = err;
+    }
+  }
+  throw last instanceof Error ? last : new Error("clipboard copy failed");
+}
+
+function copyRich(html: string, plain: string) {
+  try {
+    copyWith(copyPlan(process.platform, html, plain), (cmd, args, input) =>
+      // stdout/stderr ignored: xclip and wl-copy fork a daemon that owns the
+      // selection, and it would hold inherited output pipes open forever.
+      execFileSync(cmd, args, { input, stdio: ["pipe", "ignore", "ignore"] }),
+    );
+  } catch {
+    process.stderr.write("slack-copy: could not set the clipboard (install wl-clipboard or xclip on linux)\n");
+    process.exit(1);
+  }
+  if (process.platform === "win32") {
+    process.stderr.write("slack-copy: rich text not supported on this platform, copied plain mrkdwn only\n");
+  }
 }
 
 function main(argv: string[]) {

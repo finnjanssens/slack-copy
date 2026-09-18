@@ -10,9 +10,16 @@
     "scripts/index.ts"
   ],
   "scripts": {
-    "test": "node test.ts && node evals/check.ts",
+    "test": "node test.ts && node clipboard.test.ts && node evals/check.ts",
     "typecheck": "tsc --noEmit",
     "evals": "node evals/check.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=26"
   },
   "license": "MIT",
   "private": true

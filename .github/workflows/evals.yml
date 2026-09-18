@@ -7,11 +7,57 @@ on:
 
 jobs:
   evals:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+          - os: windows-latest
+          - os: ubuntu-latest
+            clipboard: x11
+          - os: ubuntu-latest
+            clipboard: wayland
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 26
+      - run: npm ci
+      - run: npm run typecheck
+
+      # X11: Xvfb fakes the display server; xclip itself owns the selection, so
+      # the copy survives after the CLI exits.
+      - name: set up X11 clipboard
+        if: matrix.clipboard == 'x11'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xclip
+          sudo /usr/bin/Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp &
+          sleep 2
+
+      # Wayland: a headless sway compositor provides the Wayland clipboard, so
+      # the wl-copy path (the linux default) gets exercised for real.
+      - name: set up headless Wayland clipboard
+        if: matrix.clipboard == 'wayland'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends sway wl-clipboard
+          mkdir -p /tmp/xdg
+          WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 LIBGL_ALWAYS_SOFTWARE=1 \
+            WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/tmp/xdg sway -d &
+          sleep 3
+          echo "WAYLAND_DISPLAY=wayland-1" >> "$GITHUB_ENV"
+          echo "XDG_RUNTIME_DIR=/tmp/xdg" >> "$GITHUB_ENV"
+
       - run: npm test
-      - run: node evals/check.ts
+        if: matrix.clipboard != 'x11' && matrix.clipboard != 'wayland'
+
+      - run: npm test
+        if: matrix.clipboard == 'x11'
+        env:
+          DISPLAY: :99
+
+      # plain `npm test` picks up WAYLAND_DISPLAY / XDG_RUNTIME_DIR from GITHUB_ENV
+      - run: npm test
+        if: matrix.clipboard == 'wayland'
