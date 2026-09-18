@@ -13,5 +13,5 @@
     "isolatedModules": true,
     "moduleDetection": "force"
   },
-  "include": ["scripts", "test.ts"]
+  "include": ["scripts", "test.ts", "clipboard.test.ts"]
 }
