@@ -15,5 +15,15 @@
     "evals": "node evals/check.ts"
   },
   "license": "MIT",
-  "private": true
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finnjanssens/slack-copy.git"
+  },
+  "keywords": [
+    "slack",
+    "markdown",
+    "mrkdwn",
+    "clipboard",
+    "cli"
+  ]
 }
