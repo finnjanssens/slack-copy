@@ -15,6 +15,13 @@
     { "id": "SLACK-12", "comment": "non-ASCII text passes through", "markdown": "héllo wörld — déjà vu", "mrkdwn": "héllo wörld — déjà vu" },
     { "id": "SLACK-13", "comment": "a leading multi-line comment leaves no blank first line", "markdown": "<!-- wrap\n**this** -->\n**bold**", "mrkdwn": "*bold*" },
     { "id": "SLACK-14", "comment": "unrecognised html tags are escaped, not dropped", "markdown": "<br> stays", "mrkdwn": "&lt;br&gt; stays" },
+    { "id": "SLACK-15", "comment": "hr between paragraphs", "markdown": "para one\n\n---\n\npara two", "mrkdwn": "para one\n\n────────\n\npara two" },
+    { "id": "SLACK-16", "comment": "html-significant chars in a code span are escaped, even inside code", "markdown": "x `a < b & c` y", "mrkdwn": "x `a &lt; b &amp; c` y" },
+    { "id": "SLACK-17", "comment": "emphasis adjacent to punctuation", "markdown": "winners (*bold*), and *ital* too", "mrkdwn": "winners (_bold_), and _ital_ too" },
+    { "id": "SLACK-18", "comment": "emphasis at the start and end of a line", "markdown": "*bold* starts\nends with *bold*", "mrkdwn": "_bold_ starts\nends with _bold_" },
+    { "id": "SLACK-19", "comment": "image becomes a labelled link next to a real link", "markdown": "![alt](https://img.png) and [site](https://site.dev)", "mrkdwn": "<https://img.png|alt> and <https://site.dev|site>" },
+    { "id": "SLACK-20", "comment": "nested unordered with an ordered list two levels deep", "markdown": "- a\n  - b\n    1. c", "mrkdwn": "• a\n  • b\n    1. c" },
+    { "id": "SLACK-21", "comment": "unordered nested inside ordered", "markdown": "1. a\n   - b", "mrkdwn": "1. a\n   • b" },
 
     { "id": "HTML-01", "comment": "underscore bold", "markdown": "__bold__", "html": "<p><b>bold</b></p>" },
     { "id": "HTML-02", "comment": "mailto autolink becomes a real anchor", "markdown": "<mailto:a@x.dev>", "html": "<p><a href=\"mailto:a@x.dev\">mailto:a@x.dev</a></p>" },
@@ -30,6 +37,13 @@
     { "id": "HTML-12", "comment": "three-way emphasis then plain text", "markdown": "***both*** plain", "html": "<p><b><i>both</i></b> plain</p>" },
     { "id": "HTML-13", "comment": "strike with nested emphasis", "markdown": "~~gone *away*~~", "html": "<p><s>gone <i>away</i></s></p>" },
     { "id": "HTML-14", "comment": "unrecognised html tags are escaped", "markdown": "<br> stays", "html": "<p>&lt;br&gt; stays</p>" },
-    { "id": "HTML-15", "comment": "whitespace-only lines do not start a paragraph", "markdown": "a\n   \nb", "html": "<p>a</p><p>b</p>" }
+    { "id": "HTML-15", "comment": "whitespace-only lines do not start a paragraph", "markdown": "a\n   \nb", "html": "<p>a</p><p>b</p>" },
+    { "id": "HTML-16", "comment": "multi-line quote joins with <br>", "markdown": "> line one\n> line two", "html": "<blockquote>line one<br>line two</blockquote>" },
+    { "id": "HTML-17", "comment": "bare https autolink becomes an anchor", "markdown": "see <https://x.dev> now", "html": "<p>see <a href=\"https://x.dev\">https://x.dev</a> now</p>" },
+    { "id": "HTML-18", "comment": "html-significant chars in a code span are escaped only", "markdown": "x `a < b & c` y", "html": "<p>x <code>a &lt; b &amp; c</code> y</p>" },
+    { "id": "HTML-19", "comment": "hr between paragraphs closes and reopens them", "markdown": "para one\n\n---\n\npara two", "html": "<p>para one</p><p>────────</p><p>para two</p>" },
+    { "id": "HTML-20", "comment": "image renders as a link like any other, beside a real link", "markdown": "![alt](https://img.png) and [site](https://site.dev)", "html": "<p><a href=\"https://img.png\">alt</a> and <a href=\"https://site.dev\">site</a></p>" },
+    { "id": "HTML-21", "comment": "three levels: ordered inside unordered inside unordered", "markdown": "- a\n  - b\n    1. c", "html": "<ul><li>a<ul><li>b<ol><li>c</li></ol></li></ul></li></ul>" },
+    { "id": "HTML-22", "comment": "unordered nested inside ordered", "markdown": "1. a\n   - b", "html": "<ol><li>a<ul><li>b</li></ul></li></ol>" }
   ]
 }
