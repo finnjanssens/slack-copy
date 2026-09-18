@@ -1,0 +1,35 @@
+{
+  "comment": "One row pins one behaviour. Run with: node evals/check.js. A row must pass before it lands; when the converter changes, update the row in the same commit or the suite fails.",
+  "cases": [
+    { "id": "SLACK-01", "comment": "hr written with asterisks", "markdown": "***", "mrkdwn": "────────" },
+    { "id": "SLACK-02", "comment": "hr written with underscores", "markdown": "___", "mrkdwn": "────────" },
+    { "id": "SLACK-03", "comment": "ordered list with a paren, renumbered to a dot", "markdown": "1) first", "mrkdwn": "1. first" },
+    { "id": "SLACK-04", "comment": "double-digit numbers kept verbatim", "markdown": "10. tenth\n11. eleventh", "mrkdwn": "10. tenth\n11. eleventh" },
+    { "id": "SLACK-05", "comment": "plus is a bullet marker too", "markdown": "+ plus", "mrkdwn": "• plus" },
+    { "id": "SLACK-06", "comment": "code span inside a heading survives", "markdown": "## Use `npm run build`", "mrkdwn": "*Use `npm run build`*" },
+    { "id": "SLACK-07", "comment": "bold inside a quote", "markdown": "> **bold** quote", "mrkdwn": "> *bold* quote" },
+    { "id": "SLACK-08", "comment": "autolink inside bold keeps working inside the bold", "markdown": "**see <https://x.dev>**", "mrkdwn": "*see <https://x.dev>*" },
+    { "id": "SLACK-09", "comment": "multi-line comment leaves the surrounding blank line", "markdown": "a\n<!-- c1\nc2 -->\nb", "mrkdwn": "a\n\nb" },
+    { "id": "SLACK-10", "comment": "CRLF in a list", "markdown": "- a\r\n- b", "mrkdwn": "• a\n• b" },
+    { "id": "SLACK-11", "comment": "tilde fences take no language either", "markdown": "~~~\nx\n~~~", "mrkdwn": "```\nx\n```" },
+    { "id": "SLACK-12", "comment": "non-ASCII text passes through", "markdown": "héllo wörld — déjà vu", "mrkdwn": "héllo wörld — déjà vu" },
+    { "id": "SLACK-13", "comment": "a leading multi-line comment leaves no blank first line", "markdown": "<!-- wrap\n**this** -->\n**bold**", "mrkdwn": "*bold*" },
+    { "id": "SLACK-14", "comment": "unrecognised html tags are escaped, not dropped", "markdown": "<br> stays", "mrkdwn": "&lt;br&gt; stays" },
+
+    { "id": "HTML-01", "comment": "underscore bold", "markdown": "__bold__", "html": "<p><b>bold</b></p>" },
+    { "id": "HTML-02", "comment": "mailto autolink becomes a real anchor", "markdown": "<mailto:a@x.dev>", "html": "<p><a href=\"mailto:a@x.dev\">mailto:a@x.dev</a></p>" },
+    { "id": "HTML-03", "comment": "tilde fence", "markdown": "~~~\nx\n~~~", "html": "<pre><code>x</code></pre>" },
+    { "id": "HTML-04", "comment": "consecutive list of a different type starts a new list", "markdown": "- a\n1. b", "html": "<ul><li>a</li></ul><ol><li>b</li></ol>" },
+    { "id": "HTML-05", "comment": "nested quote", "markdown": "> outer\n> > inner", "html": "<blockquote>outer<br>&gt; inner</blockquote>" },
+    { "id": "HTML-06", "comment": "quote followed by a paragraph closes the quote", "markdown": "> quoted\n\npara", "html": "<blockquote>quoted</blockquote><p>para</p>" },
+    { "id": "HTML-07", "comment": "bold inside a quote", "markdown": "> **bold** quote", "html": "<blockquote><b>bold</b> quote</blockquote>" },
+    { "id": "HTML-08", "comment": "table cells are escaped", "markdown": "| a & b |\n| --- |\n| 1 |", "html": "<pre><code>| a &amp; b |\n| 1 |</code></pre>" },
+    { "id": "HTML-09", "comment": "ordered marker with a paren", "markdown": "1) first", "html": "<ol><li>first</li></ol>" },
+    { "id": "HTML-10", "comment": "CRLF input", "markdown": "a\r\n\r\nb", "html": "<p>a</p><p>b</p>" },
+    { "id": "HTML-11", "comment": "heading ends the previous paragraph", "markdown": "intro text\n# Heading", "html": "<p>intro text</p><p><b>Heading</b></p>" },
+    { "id": "HTML-12", "comment": "three-way emphasis then plain text", "markdown": "***both*** plain", "html": "<p><b><i>both</i></b> plain</p>" },
+    { "id": "HTML-13", "comment": "strike with nested emphasis", "markdown": "~~gone *away*~~", "html": "<p><s>gone <i>away</i></s></p>" },
+    { "id": "HTML-14", "comment": "unrecognised html tags are escaped", "markdown": "<br> stays", "html": "<p>&lt;br&gt; stays</p>" },
+    { "id": "HTML-15", "comment": "whitespace-only lines do not start a paragraph", "markdown": "a\n   \nb", "html": "<p>a</p><p>b</p>" }
+  ]
+}

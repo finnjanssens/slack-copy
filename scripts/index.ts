@@ -134,7 +134,9 @@ export function toSlack(markdown: string) {
     out.push(formatInline(line));
   }
 
-  return out.join("\n").trimEnd() + "\n";
+  // Trim both ends: a multi-line comment at the top would otherwise leave a
+  // blank first line in the pasted message.
+  return out.join("\n").trim() + "\n";
 }
 
 // ---------------------------------------------------------------- HTML output
@@ -247,6 +249,7 @@ export function toHtml(markdown: string) {
 
     if (/^\s*([-*+]|\d+[.)])\s+/.test(line)) {
       flush();
+      const start = i;
       const items: {indent: number; ordered: boolean; text: string}[] = [];
       while (i < lines.length) {
         const item = lines[i]!.match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
@@ -258,8 +261,13 @@ export function toHtml(markdown: string) {
         });
         i++;
       }
-      i--;
-      out.push(listHtml(items, { i: 0 }, items[0]!.indent));
+      // listHtml may stop before the end: a type change at the same indent
+      // starts a new list, so the unconsumed lines must be re-examined
+      // instead of being skipped by a plain i--. cursor.i is relative to the
+      // line the list started on, hence the offset from `start`.
+      const cursor = { i: 0 };
+      out.push(listHtml(items, cursor, items[0]!.indent));
+      i = start + cursor.i - 1;
       continue;
     }
 
