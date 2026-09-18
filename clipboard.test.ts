@@ -112,14 +112,16 @@ if (process.platform === "darwin") {
   const got = execFileSync("powershell", ["-NoProfile", "-Command", "Get-Clipboard"], {
     encoding: "utf8",
   });
-  assert.equal(got.trim(), plain.trim(), "win32 plain flavour");
+  // Get-Clipboard hands back CRLF on Windows; the flavour itself is unchanged.
+  assert.equal(got.replace(/\r\n/g, "\n").trim(), plain.trim(), "win32 plain flavour");
 } else if (process.platform === "linux") {
   const wayland = Boolean(process.env.WAYLAND_DISPLAY) && has("wl-paste");
   const x11 = Boolean(process.env.DISPLAY) && has("xclip");
   assert.ok(wayland || x11, "linux needs a display: run under Xvfb (x11) or a headless Wayland compositor");
   runCli();
   const got = wayland
-    ? execFileSync("wl-paste", ["--type", "text/html"], { encoding: "utf8" })
+    ? // wl-copy appends a trailing newline to payloads that lack one; undo it.
+      execFileSync("wl-paste", ["--type", "text/html", "--trim-newline"], { encoding: "utf8" })
     : execFileSync("xclip", ["-o", "-selection", "clipboard", "-t", "text/html"], { encoding: "utf8" });
   assert.equal(got, html, wayland ? "wayland html flavour" : "x11 html flavour");
 }
