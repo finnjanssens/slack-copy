@@ -16,8 +16,16 @@ As a plain CLI, run it straight from GitHub:
 npx github:finnjanssens/slack-copy message.md
 ```
 
-Or as an [Agent Skill](https://agentskills.io) for Claude Code, opencode, or
-any other agent that follows the standard:
+Or as an [Agent Skill](https://agentskills.io) for Claude Code, Cursor, Codex,
+opencode, or any other agent the [skills CLI](https://github.com/vercel-labs/skills)
+supports:
+
+```bash
+npx skills add finnjanssens/slack-copy -g        # every detected agent
+npx skills add finnjanssens/slack-copy -g -a claude-code   # one agent
+```
+
+Or manually:
 
 ```bash
 git clone https://github.com/finnjanssens/slack-copy.git

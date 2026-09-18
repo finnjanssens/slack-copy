@@ -30,13 +30,20 @@ HTML it copies.
 
 ## Installing as a skill
 
+With the [skills CLI](https://github.com/vercel-labs/skills) (works across 35+
+agents):
+
+```bash
+npx skills add finnjanssens/slack-copy -g        # every detected agent
+npx skills add finnjanssens/slack-copy -g -a claude-code   # one agent
+```
+
+Or manually: clone the repo and symlink it into the agent's skills directory:
+
 ```bash
 git clone https://github.com/finnjanssens/slack-copy.git
 ln -s "$(pwd)/slack-copy" ~/.claude/skills/slack-copy
 ```
-
-Any agent that follows the Agent Skills standard loads it the same way: a
-symlink (or clone) named `slack-copy` in the agent's skills directory.
 
 ## Steps
 
