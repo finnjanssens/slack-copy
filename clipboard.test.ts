@@ -121,7 +121,7 @@ if (process.platform === "darwin") {
   runCli();
   const got = wayland
     ? // wl-copy appends a trailing newline to payloads that lack one; undo it.
-      execFileSync("wl-paste", ["--type", "text/html", "--trim-newline"], { encoding: "utf8" })
+      execFileSync("wl-paste", ["--type", "text/html", "--no-newline"], { encoding: "utf8" })
     : execFileSync("xclip", ["-o", "-selection", "clipboard", "-t", "text/html"], { encoding: "utf8" });
   assert.equal(got, html, wayland ? "wayland html flavour" : "x11 html flavour");
 }
