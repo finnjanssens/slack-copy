@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
-    "test": "node test.ts && node evals/check.ts",
+    "test": "node test.ts && node clipboard.test.ts && node evals/check.ts",
     "typecheck": "tsc --noEmit",
     "evals": "node evals/check.ts"
   },
