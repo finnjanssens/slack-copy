@@ -2,6 +2,30 @@
 
 Markdown on the clipboard, ready to paste into Slack.
 
+## Requirements
+
+- macOS (the clipboard write goes through `osascript`; with `--no-copy` the
+  converter prints on any platform)
+- Node.js 18+
+
+## Install
+
+As a plain CLI, run it straight from GitHub:
+
+```bash
+npx github:finnjanssens/slack-copy message.md
+```
+
+Or as an [Agent Skill](https://agentskills.io) for Claude Code, opencode, or
+any other agent that follows the standard:
+
+```bash
+git clone https://github.com/finnjanssens/slack-copy.git
+ln -s "$(pwd)/slack-copy" ~/.claude/skills/slack-copy
+```
+
+See [SKILL.md](SKILL.md) for the skill instructions.
+
 Slack's default composer is rich text: the one with the **B** *I* U toolbar. It
 does not interpret mrkdwn, so pasting `*bold*` or `<url|label>` into it leaves
 the asterisks, pipes and brackets sitting there literally. mrkdwn is only
