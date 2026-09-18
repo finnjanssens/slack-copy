@@ -35,6 +35,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends xvfb xclip
           sudo /usr/bin/Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp &
           sleep 2
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
 
       # Wayland: a headless sway compositor provides the Wayland clipboard, so
       # the wl-copy path (the linux default) gets exercised for real.
@@ -50,14 +51,5 @@ jobs:
           echo "WAYLAND_DISPLAY=wayland-1" >> "$GITHUB_ENV"
           echo "XDG_RUNTIME_DIR=/tmp/xdg" >> "$GITHUB_ENV"
 
+      # x11 and wayland setups export DISPLAY / WAYLAND_DISPLAY via GITHUB_ENV
       - run: npm test
-        if: matrix.clipboard != 'x11' && matrix.clipboard != 'wayland'
-
-      - run: npm test
-        if: matrix.clipboard == 'x11'
-        env:
-          DISPLAY: :99
-
-      # plain `npm test` picks up WAYLAND_DISPLAY / XDG_RUNTIME_DIR from GITHUB_ENV
-      - run: npm test
-        if: matrix.clipboard == 'wayland'

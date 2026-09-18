@@ -332,9 +332,7 @@ export function copyPlan(platform: string, html: string, plain: string): CopyPla
   return [];
 }
 
-type CopyRunner = (cmd: string, args: string[], input: string) => void;
-
-export function copyWith(plan: CopyPlan, run: CopyRunner) {
+export function copyWith(plan: CopyPlan, run: (cmd: string, args: string[], input: string) => void) {
   let last: unknown;
   for (const { cmd, args, input } of plan) {
     try {
