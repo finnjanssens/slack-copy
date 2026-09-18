@@ -4,12 +4,14 @@
   "description": "Convert Markdown to Slack mrkdwn and put it on the clipboard",
   "type": "module",
   "bin": {
-    "slack-copy": "scripts/index.ts"
+    "slack-copy": "dist/index.js"
   },
   "files": [
-    "scripts/index.ts"
+    "dist/index.js"
   ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "test": "node test.ts && node evals/check.ts",
     "typecheck": "tsc --noEmit",
     "evals": "node evals/check.ts"
