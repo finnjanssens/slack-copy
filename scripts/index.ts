@@ -293,12 +293,39 @@ export function toHtml(markdown: string) {
 // goes through AppleScript; both payloads are hex so nothing needs escaping for
 // AppleScript's string syntax.
 function copyRich(html: string, plain: string) {
-  const hex = (s: string) => Buffer.from(s, "utf8").toString("hex");
-  execFileSync("osascript", [
-    "-e",
-    `set the clipboard to {«class HTML»:«data HTML${hex(html)}», ` +
-      `«class utf8»:«data utf8${hex(plain)}»}`,
-  ]);
+  if (process.platform === "darwin") {
+    const hex = (s: string) => Buffer.from(s, "utf8").toString("hex");
+    execFileSync("osascript", [
+      "-e",
+      `set the clipboard to {«class HTML»:«data HTML${hex(html)}», ` +
+        `«class utf8»:«data utf8${hex(plain)}»}`,
+    ]);
+    return;
+  }
+
+  if (process.platform === "linux") {
+    // wl-copy and xclip offer a single flavour per invocation, so it has to be
+    // text/html: that is what Slack's rich composer reads, and pasting plain
+    // mrkdwn into it is exactly what this tool exists to avoid.
+    const tryTool = (cmd: string, args: string[]) => {
+      try {
+        execFileSync(cmd, args, { input: html });
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    if (tryTool("wl-copy", ["--type", "text/html"])) return;
+    if (tryTool("xclip", ["-selection", "clipboard", "-t", "text/html"])) return;
+    process.stderr.write("slack-copy: no clipboard tool found (install wl-clipboard or xclip)\n");
+    process.exit(1);
+  }
+
+  // Set-Clipboard is plain text only; CF_HTML is the upgrade path.
+  execFileSync("powershell", ["-NoProfile", "-Command", "$input | Set-Clipboard"], {
+    input: plain,
+  });
+  process.stderr.write("slack-copy: rich text not supported on this platform, copied plain mrkdwn only\n");
 }
 
 function main(argv: string[]) {
