@@ -49,10 +49,10 @@ So this puts two clipboard flavours down at once:
 ## Usage
 
 ```bash
-npx ~/Personal/slack-copy message.md          # convert and copy
-cat message.md | npx ~/Personal/slack-copy
-npx ~/Personal/slack-copy --no-copy msg.md    # print only
-npx ~/Personal/slack-copy --html msg.md       # print the HTML it copies
+npx github:finnjanssens/slack-copy message.md          # convert and copy
+cat message.md | npx github:finnjanssens/slack-copy
+npx github:finnjanssens/slack-copy --no-copy msg.md    # print only
+npx github:finnjanssens/slack-copy --html msg.md       # print the HTML it copies
 ```
 
 Reads a file argument or stdin. Prints the mrkdwn on stdout, since it is the
@@ -61,27 +61,8 @@ readable one to eyeball. macOS only: the clipboard write goes through
 
 ## Conversions
 
-| Markdown | HTML flavour | plain flavour |
-| --- | --- | --- |
-| `**bold**`, `__bold__` | `<b>` | `*bold*` |
-| `*italic*`, `_italic_` | `<i>` | `_italic_` |
-| `***both***` | `<b><i>` | `*_both_*` |
-| `~~strike~~` | `<s>` | `~strike~` |
-| `# Heading` | bold paragraph | `*Heading*` |
-| `[text](url)` | `<a href>` | `<url\|text>` |
-| `` `code` `` | `<code>` | unchanged |
-| ` ```js ` | `<pre><code>` | ` ``` `, language dropped |
-| lists, nested | `<ul>`/`<ol>`, nested in the `<li>` | `•`, indent kept |
-| `> quote` | `<blockquote>` | `> quote` |
-| tables | `<pre>`, columns kept aligned | code block |
-| `---` | `────────` | `────────` |
-| `<!-- comment -->` | removed | removed |
-
-Neither target has headings or tables, so those degrade rather than convert.
-Code spans and fences are escaped but never reformatted.
-
-Not handled: reference links (`[text][id]`), setext headings (`===` underlines),
-footnotes.
+See [references/conversions.md](references/conversions.md) for the full
+Markdown → mrkdwn/HTML table.
 
 ## Test
 

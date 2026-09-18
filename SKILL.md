@@ -14,13 +14,13 @@ natively, with mrkdwn as a plain-text fallback.
 
 ## Usage
 
-Run the converter from this skill's directory (`index.js` sits at the skill
-root). It reads a file argument or stdin, copies both clipboard flavours and
-prints the mrkdwn on stdout:
+Run the converter from this skill's directory (`scripts/index.js` sits under
+`scripts/`, per the Agent Skills layout). It reads a file argument or stdin,
+copies both clipboard flavours and prints the mrkdwn on stdout:
 
 ```bash
-npx github:finnjanssens/slack-copy msg.md     # from anywhere
-node <skill-dir>/index.js msg.md              # when installed as a skill
+npx github:finnjanssens/slack-copy msg.md          # from anywhere
+node <skill-dir>/scripts/index.js msg.md           # when installed as a skill
 cat msg.md | npx github:finnjanssens/slack-copy
 ```
 
@@ -59,8 +59,8 @@ ln -s "$(pwd)/slack-copy" ~/.claude/skills/slack-copy
 
 Bold, italic, strikethrough, inline code, code blocks, links, nested lists and
 blockquotes all survive as real Slack formatting. Headings become bold
-paragraphs and tables become code blocks, because Slack has neither. See the
-[README](README.md) for the full conversion table.
+paragraphs and tables become code blocks, because Slack has neither. See
+[references/conversions.md](references/conversions.md) for the full table.
 
 ## Notes
 

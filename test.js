@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { toSlack, toHtml } from "./index.js";
+import { toSlack, toHtml } from "./scripts/index.js";
 
 const eq = (md, expected, msg) => assert.equal(toSlack(md), expected + "\n", msg);
 const html = (md, expected, msg) => assert.equal(toHtml(md), expected, msg);
