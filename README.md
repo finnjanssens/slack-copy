@@ -10,7 +10,15 @@ Markdown on the clipboard, ready to paste into Slack.
 
 ## Install
 
-As a plain CLI, run it straight from GitHub:
+From npm:
+
+```bash
+npx slack-copy message.md
+# or
+npm install -g slack-copy
+```
+
+Pre-publish, run it straight from GitHub:
 
 ```bash
 npx github:finnjanssens/slack-copy message.md
@@ -49,10 +57,11 @@ So this puts two clipboard flavours down at once:
 ## Usage
 
 ```bash
-npx github:finnjanssens/slack-copy message.md          # convert and copy
-cat message.md | npx github:finnjanssens/slack-copy
-npx github:finnjanssens/slack-copy --no-copy msg.md    # print only
-npx github:finnjanssens/slack-copy --html msg.md       # print the HTML it copies
+npx slack-copy message.md                              # convert and copy
+npx github:finnjanssens/slack-copy message.md          # pre-publish, from GitHub
+cat message.md | npx slack-copy
+npx slack-copy --no-copy msg.md                        # print only
+npx slack-copy --html msg.md                           # print the HTML it copies
 ```
 
 Reads a file argument or stdin. Prints the mrkdwn on stdout, since it is the

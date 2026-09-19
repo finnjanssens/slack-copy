@@ -3,13 +3,21 @@
   "version": "1.0.0",
   "description": "Convert Markdown to Slack mrkdwn and put it on the clipboard",
   "type": "module",
+  "author": {
+    "name": "Finn Janssens",
+    "url": "https://github.com/finnjanssens"
+  },
+  "homepage": "https://github.com/finnjanssens/slack-copy#readme",
+  "bugs": "https://github.com/finnjanssens/slack-copy/issues",
   "bin": {
-    "slack-copy": "scripts/index.ts"
+    "slack-copy": "dist/index.js"
   },
   "files": [
-    "scripts/index.ts"
+    "dist/index.js"
   ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "test": "node test.ts && node clipboard.test.ts && node evals/check.ts",
     "typecheck": "tsc --noEmit",
     "evals": "node evals/check.ts"
@@ -22,5 +30,15 @@
     "node": ">=26"
   },
   "license": "MIT",
-  "private": true
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finnjanssens/slack-copy.git"
+  },
+  "keywords": [
+    "slack",
+    "markdown",
+    "mrkdwn",
+    "clipboard",
+    "cli"
+  ]
 }
