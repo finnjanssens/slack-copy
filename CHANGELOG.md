@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/finnjanssens/slack-copy/compare/slack-copy-v1.1.0...slack-copy-v1.1.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* publish in the release-please workflow, GITHUB_TOKEN releases cannot trigger other workflows ([8226df8](https://github.com/finnjanssens/slack-copy/commit/8226df8a79136e562d7391cf74ce72c6ccf7344d))
+* skip clipboard round-trip on linux without a display ([4b24ec3](https://github.com/finnjanssens/slack-copy/commit/4b24ec30b5e7b91a508409eaae8c9fed5985c54b))
+
 ## [1.1.0](https://github.com/finnjanssens/slack-copy/compare/slack-copy-v1.0.0...slack-copy-v1.1.0) (2026-09-21)
 
 
