@@ -1,6 +1,6 @@
 {
   "name": "slack-copy",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Convert Markdown to Slack mrkdwn and put it on the clipboard",
   "type": "module",
   "author": {
