@@ -29,6 +29,29 @@ const isTableSeparator = (line: string | undefined) => /^\s*\|?[\s:|-]*-[\s:|-]*
 
 const isTableRow = (line: string) => /^\s*\|/.test(line);
 
+// Cells of one pipe-table row; \| keeps the pipe it quotes. Unescaped: the
+// mrkdwn and HTML flavours escape differently around alignTable.
+const splitRow = (line: string) =>
+  line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .replace(/\\\|/g, "\x02")
+    .split("|")
+    .map((cell) => cell.trim().replaceAll("\x02", "|"));
+
+// Space-aligned monospace table: columns padded to the widest cell, a dashed
+// separator under the header. Alignment only survives in monospace, so callers
+// put the result in a code block.
+function alignTable(rows: string[][]) {
+  const widths = rows[0]!.map((_, c) => Math.max(...rows.map((row) => (row[c] ?? "").length)));
+  const lines = rows.map((row) =>
+    widths.map((w, c) => (row[c] ?? "").padEnd(w, " ")).join("  ").trimEnd(),
+  );
+  const separator = widths.map((w) => "-".repeat(w)).join("  ");
+  return [lines[0]!, separator, ...lines.slice(1)].join("\n");
+}
+
 // Inline formatting for one run of non-code text.
 function formatRun(text: string) {
   let out = escapeEntities(text);
@@ -86,15 +109,16 @@ export function toSlack(markdown: string) {
       continue;
     }
 
-    // Tables have no mrkdwn equivalent; a fence at least keeps them aligned.
+    // Tables have no mrkdwn equivalent; space-aligned cells in a fence at
+    // least keep the columns lined up.
     if (isTableRow(line) && isTableSeparator(lines[i + 1])) {
-      const rows: string[] = [];
+      const rows: string[][] = [];
       while (i < lines.length && isTableRow(lines[i]!)) {
-        if (!isTableSeparator(lines[i]!)) rows.push(escapeEntities(lines[i]!));
+        if (!isTableSeparator(lines[i]!)) rows.push(splitRow(lines[i]!));
         i++;
       }
       i--;
-      out.push("```", ...rows, "```");
+      out.push("```", alignTable(rows.map((row) => row.map(escapeEntities))), "```");
       continue;
     }
 
@@ -222,14 +246,14 @@ export function toHtml(markdown: string) {
 
     if (isTableRow(line) && isTableSeparator(lines[i + 1])) {
       flush();
-      const rows: string[] = [];
+      const rows: string[][] = [];
       while (i < lines.length && isTableRow(lines[i]!)) {
-        if (!isTableSeparator(lines[i]!)) rows.push(lines[i]!);
+        if (!isTableSeparator(lines[i]!)) rows.push(splitRow(lines[i]!));
         i++;
       }
       i--;
       // Slack's composer has no table, but a code block keeps the columns lined up.
-      out.push(`<pre><code>${escapeHtml(rows.join("\n"))}</code></pre>`);
+      out.push(`<pre><code>${escapeHtml(alignTable(rows))}</code></pre>`);
       continue;
     }
 
