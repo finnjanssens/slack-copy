@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/finnjanssens/slack-copy/compare/slack-copy-v1.1.1...slack-copy-v1.2.0) (2026-09-28)
+
+
+### Features
+
+* render markdown tables as space-aligned code blocks ([dd683a1](https://github.com/finnjanssens/slack-copy/commit/dd683a13632547cc73782bd1092baf8c9d4f9fb4))
+* render markdown tables as space-aligned code blocks ([a7cfa52](https://github.com/finnjanssens/slack-copy/commit/a7cfa52a36680bd0c9f1a1b2848ae80ea493a5e3))
+
 ## [1.1.1](https://github.com/finnjanssens/slack-copy/compare/slack-copy-v1.1.0...slack-copy-v1.1.1) (2026-09-21)
 
 
