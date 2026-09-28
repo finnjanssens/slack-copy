@@ -48,7 +48,7 @@ eq("> quoted", "> quoted");
 eq("---", "────────");
 eq("```js\nconst x = 1;\n```", "```\nconst x = 1;\n```", "fence language dropped");
 eq("```\n**literal**\n```", "```\n**literal**\n```", "fence contents untouched");
-eq("| a | b |\n| --- | --- |\n| 1 | 2 |", "```\n| a | b |\n| 1 | 2 |\n```", "table fenced, separator dropped");
+eq("| a | b |\n| --- | --- |\n| 1 | 2 |", "```\na  b\n-  -\n1  2\n```", "table space-aligned in a fence");
 eq("before <!-- hide me --> after", "before  after", "html comments removed");
 
 // Structure
@@ -93,7 +93,7 @@ html("> quoted", "<blockquote>quoted</blockquote>");
 html("> one\n> two", "<blockquote>one<br>two</blockquote>", "quote lines joined");
 html("```js\nx < 1;\n```", "<pre><code>x &lt; 1;</code></pre>", "language dropped, contents escaped");
 html("```\n**literal**\n```", "<pre><code>**literal**</code></pre>");
-html("| a | b |\n| --- | --- |\n| 1 | 2 |", "<pre><code>| a | b |\n| 1 | 2 |</code></pre>");
+html("| a | b |\n| --- | --- |\n| 1 | 2 |", "<pre><code>a  b\n-  -\n1  2</code></pre>");
 html("---", "<p>────────</p>");
 html("a <!-- x --> b", "<p>a  b</p>");
 html("", "", "empty input produces no markup");

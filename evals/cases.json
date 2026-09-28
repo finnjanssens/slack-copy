@@ -22,6 +22,7 @@
     { "id": "SLACK-19", "comment": "image becomes a labelled link next to a real link", "markdown": "![alt](https://img.png) and [site](https://site.dev)", "mrkdwn": "<https://img.png|alt> and <https://site.dev|site>" },
     { "id": "SLACK-20", "comment": "nested unordered with an ordered list two levels deep", "markdown": "- a\n  - b\n    1. c", "mrkdwn": "• a\n  • b\n    1. c" },
     { "id": "SLACK-21", "comment": "unordered nested inside ordered", "markdown": "1. a\n   - b", "mrkdwn": "1. a\n   • b" },
+   { "id": "SLACK-22", "comment": "table becomes a space-aligned code block with a dashed separator", "markdown": "| Name | Role |\n| --- | --- |\n| Alice | Developer |\n| Bob | Away |", "mrkdwn": "```\nName   Role\n-----  ---------\nAlice  Developer\nBob    Away\n```" },
 
     { "id": "HTML-01", "comment": "underscore bold", "markdown": "__bold__", "html": "<p><b>bold</b></p>" },
     { "id": "HTML-02", "comment": "mailto autolink becomes a real anchor", "markdown": "<mailto:a@x.dev>", "html": "<p><a href=\"mailto:a@x.dev\">mailto:a@x.dev</a></p>" },
@@ -30,7 +31,7 @@
     { "id": "HTML-05", "comment": "nested quote", "markdown": "> outer\n> > inner", "html": "<blockquote>outer<br>&gt; inner</blockquote>" },
     { "id": "HTML-06", "comment": "quote followed by a paragraph closes the quote", "markdown": "> quoted\n\npara", "html": "<blockquote>quoted</blockquote><p>para</p>" },
     { "id": "HTML-07", "comment": "bold inside a quote", "markdown": "> **bold** quote", "html": "<blockquote><b>bold</b> quote</blockquote>" },
-    { "id": "HTML-08", "comment": "table cells are escaped", "markdown": "| a & b |\n| --- |\n| 1 |", "html": "<pre><code>| a &amp; b |\n| 1 |</code></pre>" },
+    { "id": "HTML-08", "comment": "table becomes a space-aligned code block, cells escaped", "markdown": "| a & b |\n| --- |\n| 1 |", "html": "<pre><code>a &amp; b\n-----\n1</code></pre>" },
     { "id": "HTML-09", "comment": "ordered marker with a paren", "markdown": "1) first", "html": "<ol><li>first</li></ol>" },
     { "id": "HTML-10", "comment": "CRLF input", "markdown": "a\r\n\r\nb", "html": "<p>a</p><p>b</p>" },
     { "id": "HTML-11", "comment": "heading ends the previous paragraph", "markdown": "intro text\n# Heading", "html": "<p>intro text</p><p><b>Heading</b></p>" },
